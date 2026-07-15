@@ -109,18 +109,21 @@ cp -R ~/dev/lima-template ~/dev/my-lab-vm
 lima-template/
 ├── README.md        # 이 문서
 ├── Taskfile.yaml    # up/shell/delete 등 + 변수
-└── vm.yaml          # Lima 인스턴스 템플릿
+├── vm.yaml          # Lima 인스턴스 템플릿
+└── provision/
+    └── system.py    # system provision 스크립트 (path로 참조)
 ```
 
 ## 게스트 provision 요약
 
-`vm.yaml` system provision:
+`vm.yaml`의 system provision은 외부 스크립트 `provision/system.py`를 `path`로 참조한다 (생성 시점에 인라인됨):
 
 1. `dev` 사용자 비밀번호 `dev` 설정
-2. hostname을 인스턴스명(`{{.Name}}`)으로 변경
-3. `avahi` 설치·기동 (mDNS)
+2. SSH 비밀번호 인증 허용
+3. hostname을 인스턴스명(`{{.Name}}`)으로 변경
+4. `avahi` 설치·기동 (mDNS)
 
-비밀번호/패키지를 바꾸려면 `vm.yaml`의 `provision` 블록을 수정한 뒤 `task recreate` 하세요.
+비밀번호/패키지를 바꾸려면 `provision/system.py`를 수정한 뒤 `task recreate` 하세요. 스크립트는 멱등(idempotent)해야 합니다.
 
 ## 노트
 

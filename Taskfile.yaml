@@ -143,4 +143,5 @@ tasks:
     cmds:
       - mkdir -p {{.DEST}}
       - cp {{.CONFIG}} Taskfile.yaml README.md {{.DEST}}/
+      - cp -R provision {{.DEST}}/
       - 'echo "→ {{.DEST}} 에 템플릿 복사 완료"'
