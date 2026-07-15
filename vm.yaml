@@ -28,6 +28,11 @@ networks:
 user:
   name: "dev"
 
+# mDNS/호스트명 파라미터 (Taskfile HOSTNAME 또는 limactl --set='.param.HOSTNAME=...' 로 덮어쓰기)
+# 최종 접속 이름은 <HOSTNAME>.local (avahi 광고)
+param:
+  HOSTNAME: "rocky"
+
 # Linux guest는 password 기본 잠금 → provision으로 설정
 provision:
   - mode: system
@@ -43,7 +48,8 @@ provision:
       install -d -m755 /etc/ssh/sshd_config.d
       printf 'PasswordAuthentication yes\n' > /etc/ssh/sshd_config.d/99-password-auth.conf
       systemctl restart sshd || systemctl restart ssh || true
-      # Lima 기본 hostname은 lima-<name> → mDNS 이름용으로 인스턴스명으로 변경
-      hostnamectl set-hostname "{{.Name}}"
+      # Lima 기본 hostname은 lima-<name> → mDNS 이름용으로 param.HOSTNAME 으로 변경
+      # 결과: <HOSTNAME>.local 로 도달 가능 (예: rocky.local)
+      hostnamectl set-hostname "{{.Param.HOSTNAME}}"
       dnf install -y avahi avahi-tools
       systemctl enable --now avahi-daemon

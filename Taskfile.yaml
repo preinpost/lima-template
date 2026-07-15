@@ -11,6 +11,8 @@ vars:
   # 인스턴스 / 설정
   VM: '{{.VM | default "rocky"}}'
   CONFIG: '{{.CONFIG | default "vm.yaml"}}'
+  # mDNS/게스트 호스트명 (기본값은 인스턴스명). 최종 접속 이름은 <HOSTNAME>.local
+  HOSTNAME: '{{.HOSTNAME | default .VM}}'
 
   # 스펙 (create 시 limactl --set 으로 반영)
   IMAGE: '{{.IMAGE | default "~/virt/lima/rocky-lima.qcow2"}}'
@@ -40,6 +42,8 @@ tasks:
         MEMORY={{.MEMORY}}
         DISK={{.DISK}}
         GUEST_USER={{.GUEST_USER}}
+        HOSTNAME={{.HOSTNAME}}
+        MDNS={{.HOSTNAME}}.local
         EOF
     silent: true
 
@@ -54,13 +58,15 @@ tasks:
           --set='.cpus = {{.CPUS}}' \
           --set='.memory = "{{.MEMORY}}"' \
           --set='.disk = "{{.DISK}}"' \
-          --set='.user.name = "{{.GUEST_USER}}"'
+          --set='.user.name = "{{.GUEST_USER}}"' \
+          --set='.param.HOSTNAME = "{{.HOSTNAME}}"'
 
   up:
     desc: VM 시작 (없으면 생성 후 시작)
     cmds:
       - task: create
       - limactl start {{.VM}} --tty=false
+      - 'echo "→ mDNS: {{.HOSTNAME}}.local"'
 
   start:
     desc: up 별칭 (VM 시작)
