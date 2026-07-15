@@ -53,7 +53,7 @@ task ip
 | `CPUS` | `2` | vCPU |
 | `MEMORY` | `14GiB` | 메모리 |
 | `DISK` | `50GiB` | 디스크 크기 |
-| `USER` | `dev` | 게스트 사용자 (비번: provision 스크립트 기본 `dev:dev`) |
+| `GUEST_USER` | `dev` | 게스트 사용자 (비번: provision 스크립트 기본 `dev:dev`). ※ `USER` 는 셸 환경변수와 충돌하므로 사용하지 않음 |
 
 예시:
 

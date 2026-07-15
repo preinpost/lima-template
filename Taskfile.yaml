@@ -17,7 +17,9 @@ vars:
   CPUS: '{{.CPUS | default "2"}}'
   MEMORY: '{{.MEMORY | default "14GiB"}}'
   DISK: '{{.DISK | default "50GiB"}}'
-  USER: '{{.USER | default "dev"}}'
+  # 주의: 변수명을 USER 로 두면 셸 환경변수 $USER(로그인 계정)가 주입되어
+  #       default "dev" 가 무시됨 → GUEST_USER 로 분리
+  GUEST_USER: '{{.GUEST_USER | default "dev"}}'
 
 tasks:
   default:
@@ -37,12 +39,12 @@ tasks:
         CPUS={{.CPUS}}
         MEMORY={{.MEMORY}}
         DISK={{.DISK}}
-        USER={{.USER}}
+        GUEST_USER={{.GUEST_USER}}
         EOF
     silent: true
 
   create:
-    desc: VM 인스턴스 생성 (이미 있으면 건너뜀). IMAGE/CPUS/MEMORY/DISK/USER 반영
+    desc: VM 인스턴스 생성 (이미 있으면 건너뜀). IMAGE/CPUS/MEMORY/DISK/GUEST_USER 반영
     status:
       - limactl list {{.VM}} --quiet 2>/dev/null | grep -q '^{{.VM}}$\|^{{.VM}}\s'
     cmds:
@@ -52,7 +54,7 @@ tasks:
           --set='.cpus = {{.CPUS}}' \
           --set='.memory = "{{.MEMORY}}"' \
           --set='.disk = "{{.DISK}}"' \
-          --set='.user.name = "{{.USER}}"'
+          --set='.user.name = "{{.GUEST_USER}}"'
 
   up:
     desc: VM 시작 (없으면 생성 후 시작)
