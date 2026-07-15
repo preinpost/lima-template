@@ -3,6 +3,7 @@
 macOS [Lima](https://lima-vm.io/) VM을 재사용 가능한 템플릿으로 관리하는 프로젝트.
 
 - **런타임**: `vmType: vz` (Apple Virtualization)
+- **중첩 가상화**: `nestedVirtualization: true` (Apple silicon M3+ / macOS 15+)
 - **기본 이미지**: 로컬 Rocky Linux aarch64 (`~/virt/lima/rocky-lima.qcow2`)
 - **네트워크**: `vzNAT` (호스트에서 게스트 IP 직접 접근)
 - **제어**: [Task](https://taskfile.dev/) (`task up`, `task shell`, …)

@@ -8,6 +8,9 @@
 vmType: "vz"
 arch: "aarch64"
 
+# 중첩 가상화 (Apple silicon M3+ / macOS 15+ / vz 전용)
+nestedVirtualization: true
+
 images:
   # 로컬 커스텀 이미지 (기본 경로). Taskfile IMAGE 로 덮어쓰기 가능
   - location: "~/virt/lima/rocky-lima.qcow2"
@@ -32,6 +35,14 @@ provision:
       #!/bin/bash
       set -eux -o pipefail
       echo 'dev:dev' | chpasswd
+      # SSH 비밀번호 인증 허용 (클라우드 이미지 기본값 no)
+      #  - sshd는 '첫 값 우선'이라 50-cloud-init.conf(no)가 이김 → 그 파일을 직접 yes로
+      if [ -f /etc/ssh/sshd_config.d/50-cloud-init.conf ]; then
+        sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config.d/50-cloud-init.conf
+      fi
+      install -d -m755 /etc/ssh/sshd_config.d
+      printf 'PasswordAuthentication yes\n' > /etc/ssh/sshd_config.d/99-password-auth.conf
+      systemctl restart sshd || systemctl restart ssh || true
       # Lima 기본 hostname은 lima-<name> → mDNS 이름용으로 인스턴스명으로 변경
       hostnamectl set-hostname "{{.Name}}"
       dnf install -y avahi avahi-tools
