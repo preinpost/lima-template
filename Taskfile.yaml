@@ -10,7 +10,7 @@ version: "3"
 vars:
   # 인스턴스 / 설정
   VM: '{{.VM | default "rocky"}}'
-  CONFIG: '{{.CONFIG | default "rocky.yaml"}}'
+  CONFIG: '{{.CONFIG | default "vm.yaml"}}'
 
   # 스펙 (create 시 limactl --set 으로 반영)
   IMAGE: '{{.IMAGE | default "~/virt/lima/rocky-lima.qcow2"}}'

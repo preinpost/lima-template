@@ -48,7 +48,7 @@ task ip
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
 | `VM` | `rocky` | lima 인스턴스 이름 |
-| `CONFIG` | `rocky.yaml` | 템플릿 YAML |
+| `CONFIG` | `vm.yaml` | 템플릿 YAML |
 | `IMAGE` | `~/virt/lima/rocky-lima.qcow2` | 게스트 디스크 이미지 |
 | `CPUS` | `2` | vCPU |
 | `MEMORY` | `14GiB` | 메모리 |
@@ -109,21 +109,21 @@ cp -R ~/dev/lima-template ~/dev/my-lab-vm
 lima-template/
 ├── README.md        # 이 문서
 ├── Taskfile.yaml    # up/shell/delete 등 + 변수
-└── rocky.yaml       # Lima 인스턴스 템플릿
+└── vm.yaml          # Lima 인스턴스 템플릿
 ```
 
 ## 게스트 provision 요약
 
-`rocky.yaml` system provision:
+`vm.yaml` system provision:
 
 1. `dev` 사용자 비밀번호 `dev` 설정
 2. hostname을 인스턴스명(`{{.Name}}`)으로 변경
 3. `avahi` 설치·기동 (mDNS)
 
-비밀번호/패키지를 바꾸려면 `rocky.yaml`의 `provision` 블록을 수정한 뒤 `task recreate` 하세요.
+비밀번호/패키지를 바꾸려면 `vm.yaml`의 `provision` 블록을 수정한 뒤 `task recreate` 하세요.
 
 ## 노트
 
-- **아키텍처**: 기본 `aarch64` (Apple Silicon). Intel이면 `rocky.yaml`의 `arch` / 이미지를 바꿔야 합니다.
+- **아키텍처**: 기본 `aarch64` (Apple Silicon). Intel이면 `vm.yaml`의 `arch` / 이미지를 바꿔야 합니다.
 - **이미지**: git에 qcow2를 넣지 마세요. 호스트 로컬 경로 또는 내부 아티팩트 저장소를 쓰세요.
 - **기존 virt 트리**: 원본 작업 디렉터리는 `~/virt/lima` 에 남아 있습니다. 이 레포는 그 설정을 템플릿화한 것입니다.
