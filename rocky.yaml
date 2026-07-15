@@ -1,0 +1,38 @@
+# Rocky Linux (aarch64) Lima 템플릿
+# 기본값은 Taskfile vars / limactl --set 으로 덮어쓸 수 있음
+#
+# 예:
+#   task up
+#   task up VM=lab IMAGE=~/virt/lima/rocky-lima.qcow2 CPUS=4 MEMORY=8GiB
+
+vmType: "vz"
+arch: "aarch64"
+
+images:
+  # 로컬 커스텀 이미지 (기본 경로). Taskfile IMAGE 로 덮어쓰기 가능
+  - location: "~/virt/lima/rocky-lima.qcow2"
+    arch: "aarch64"
+
+cpus: 2
+memory: "14GiB"
+disk: "50GiB"
+
+# 호스트에서 직접 도달 가능한 IP (전 포트 접근). 설치·sudo 불필요, vz 전용
+networks:
+  - vzNAT: true
+
+# 게스트 사용자
+user:
+  name: "dev"
+
+# Linux guest는 password 기본 잠금 → provision으로 설정
+provision:
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      echo 'dev:dev' | chpasswd
+      # Lima 기본 hostname은 lima-<name> → mDNS 이름용으로 인스턴스명으로 변경
+      hostnamectl set-hostname "{{.Name}}"
+      dnf install -y avahi avahi-tools
+      systemctl enable --now avahi-daemon

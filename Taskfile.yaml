@@ -1,0 +1,146 @@
+# Lima VM 템플릿 제어용 Taskfile
+# 사용법:
+#   task up
+#   task up VM=lab CPUS=4 MEMORY=8GiB
+#   task shell -- uname -a
+# 작업 목록: task --list
+
+version: "3"
+
+vars:
+  # 인스턴스 / 설정
+  VM: '{{.VM | default "rocky"}}'
+  CONFIG: '{{.CONFIG | default "rocky.yaml"}}'
+
+  # 스펙 (create 시 limactl --set 으로 반영)
+  IMAGE: '{{.IMAGE | default "~/virt/lima/rocky-lima.qcow2"}}'
+  CPUS: '{{.CPUS | default "2"}}'
+  MEMORY: '{{.MEMORY | default "14GiB"}}'
+  DISK: '{{.DISK | default "50GiB"}}'
+  USER: '{{.USER | default "dev"}}'
+
+tasks:
+  default:
+    desc: 사용 가능한 작업 목록 표시
+    cmds:
+      - task --list
+    silent: true
+
+  vars:
+    desc: 현재 템플릿 변수 출력
+    cmds:
+      - |
+        cat <<EOF
+        VM={{.VM}}
+        CONFIG={{.CONFIG}}
+        IMAGE={{.IMAGE}}
+        CPUS={{.CPUS}}
+        MEMORY={{.MEMORY}}
+        DISK={{.DISK}}
+        USER={{.USER}}
+        EOF
+    silent: true
+
+  create:
+    desc: VM 인스턴스 생성 (이미 있으면 건너뜀). IMAGE/CPUS/MEMORY/DISK/USER 반영
+    status:
+      - limactl list {{.VM}} --quiet 2>/dev/null | grep -q '^{{.VM}}$\|^{{.VM}}\s'
+    cmds:
+      - |
+        limactl create --name={{.VM}} {{.CONFIG}} --tty=false \
+          --set='.images[0].location = "{{.IMAGE}}"' \
+          --set='.cpus = {{.CPUS}}' \
+          --set='.memory = "{{.MEMORY}}"' \
+          --set='.disk = "{{.DISK}}"' \
+          --set='.user.name = "{{.USER}}"'
+
+  up:
+    desc: VM 시작 (없으면 생성 후 시작)
+    cmds:
+      - task: create
+      - limactl start {{.VM}} --tty=false
+
+  start:
+    desc: up 별칭 (VM 시작)
+    cmds:
+      - task: up
+
+  stop:
+    desc: VM 정상 종료
+    cmds:
+      - limactl stop {{.VM}}
+
+  restart:
+    desc: VM 재시작 (stop 후 start)
+    cmds:
+      - task: stop
+      - task: up
+
+  shell:
+    desc: VM 안으로 셸 진입 (인자 전달 가능, 예 - task shell -- ls -la)
+    interactive: true
+    cmds:
+      - limactl shell {{.VM}} {{.CLI_ARGS}}
+
+  ssh:
+    desc: VM에 SSH 접속
+    interactive: true
+    cmds:
+      - limactl shell {{.VM}}
+
+  ssh-info:
+    desc: SSH 접속 정보 출력 (~/.ssh/config 형식)
+    cmds:
+      - limactl show-ssh {{.VM}}
+
+  ip:
+    desc: VM의 IP 주소 확인 (vzNAT)
+    cmds:
+      - limactl shell {{.VM}} -- ip -4 -o addr show scope global
+
+  status:
+    desc: VM 상태 확인
+    cmds:
+      - limactl list {{.VM}}
+
+  list:
+    desc: 모든 lima 인스턴스 목록
+    cmds:
+      - limactl list
+
+  info:
+    desc: VM 상세 정보 (JSON)
+    cmds:
+      - limactl list {{.VM}} --json
+
+  delete:
+    desc: VM 인스턴스 삭제 (실행 중이면 강제 종료 후 삭제)
+    prompt: "{{.VM}} 인스턴스를 삭제합니다. 계속할까요?"
+    cmds:
+      - limactl delete --force {{.VM}}
+
+  recreate:
+    desc: VM 삭제 후 재생성 (초기화). 스펙 변수 다시 적용됨
+    cmds:
+      - task: delete
+      - task: up
+
+  edit:
+    desc: VM 설정 편집
+    interactive: true
+    cmds:
+      - limactl edit {{.VM}}
+
+  logs:
+    desc: VM 시리얼/부팅 로그 확인
+    cmds:
+      - tail -n 100 -f {{.HOME}}/.lima/{{.VM}}/serialv.log
+
+  clone-template:
+    desc: 이 템플릿을 새 디렉터리로 복사 (DEST 필수, 예 - task clone-template DEST=~/dev/my-vm)
+    requires:
+      vars: [DEST]
+    cmds:
+      - mkdir -p {{.DEST}}
+      - cp {{.CONFIG}} Taskfile.yaml README.md {{.DEST}}/
+      - 'echo "→ {{.DEST}} 에 템플릿 복사 완료"'
